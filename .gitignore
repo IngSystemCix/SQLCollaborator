@@ -1,0 +1,52 @@
+# Archivos de entorno y configuración local
+.env
+.env.local
+.env.*.local
+node_modules
+
+# Node modules
+/apps/frontend/node_modules/
+/apps/backend/node_modules/
+
+# Build / distribución
+/apps/frontend/build/
+/apps/frontend/dist/
+/apps/backend/build/
+/apps/backend/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor y OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Husky (a veces se ignoran los hooks por error, si quieres versionarlos déjalo fuera)
+.husky/
+
+# Cache de dependencias
+/.bun
+/.cache
+/.turbo
+
+# Archivos generados de TypeScript
+*.tsbuildinfo
+
+# Test coverage reports
+coverage/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Directorios o archivos específicos de tu proyecto que no quieras subir
+# por ejemplo:
+# /apps/backend/secrets/
+# /apps/frontend/.env
+
