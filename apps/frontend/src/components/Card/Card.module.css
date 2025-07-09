@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.card {
+    @apply border border-gray-300 rounded-md shadow-sm overflow-hidden bg-white dark:bg-gray-800;
+    & .card-title {
+      @apply text-lg font-semibold p-4 bg-gray-100 border-b border-gray-200;
+    }
+    & .card-body {
+      @apply p-4;
+    }
+    & .card-footer {
+      @apply p-4 bg-gray-100 border-t border-gray-200;
+    }
+  }

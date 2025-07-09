@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.tabs-container {
+  @apply w-full h-auto;
+}
+
+.tabs-header {
+  @apply flex items-center justify-between px-3 py-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700;
+}
+
+/* Flex horizontal para tabs */
+.tabs-list {
+  @apply flex flex-row gap-2 overflow-x-auto;
+}
+
+.tab {
+  @apply flex items-center gap-2 px-4 py-2 rounded-md cursor-pointer transition-colors select-none;
+  @apply text-gray-700 bg-gray-200 dark:text-gray-300 dark:bg-gray-700;
+}
+
+.tab:hover {
+  @apply bg-gray-300 dark:bg-gray-600;
+}
+
+.tab.active {
+  @apply bg-blue-700 text-white dark:bg-blue-500 dark:text-white;
+}
+
+.tab-icon {
+  @apply inline-block;
+}
+
+.tab button {
+  @apply text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400;
+}
+
+.tab-add-btn {
+  @apply ml-2 px-3 py-2 rounded-md bg-gray-200 text-gray-600 hover:bg-gray-300;
+  @apply dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600;
+}

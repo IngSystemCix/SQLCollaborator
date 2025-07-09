@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.navbar {
+  @apply w-full bg-white dark:bg-slate-800 shadow-md flex items-center justify-between px-4 py-4;
+}
+
+.avatar-container {
+  @apply relative flex items-center space-x-2;
+}
+
+.avatar {
+  @apply w-8 h-8 rounded-full border border-gray-300 cursor-pointer;
+}

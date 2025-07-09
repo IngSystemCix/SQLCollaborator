@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.result-container {
+  @apply w-full h-[25.7rem] p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700;
+}
+
+.loading {
+  @apply text-sm text-gray-600 dark:text-gray-300 italic w-full h-full flex items-center justify-center;
+}
+
+.error {
+  @apply text-red-600 dark:text-red-400 font-medium mt-2;
+}
+
+.no-results {
+  @apply text-gray-500 dark:text-gray-400 mt-2 text-sm w-full h-full flex flex-col items-center justify-center;
+}
+
+.results {
+  @apply mt-4 overflow-x-auto;
+}
+
+.result-table {
+  @apply w-full text-sm border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden;
+}
+
+.result-table thead {
+  @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100;
+}
+
+.result-table th {
+  @apply px-4 py-2 border-b border-gray-300 dark:border-gray-600 text-left font-semibold;
+}
+
+.result-table td {
+  @apply px-4 py-2 border-t border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-100 whitespace-nowrap;
+}
+
+.result-table tr:nth-child(even) {
+  @apply bg-gray-50 dark:bg-gray-800/50;
+}

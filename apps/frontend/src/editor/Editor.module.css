@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.editor-container {
+  @apply w-full h-full flex flex-col items-center justify-between overflow-hidden;
+}

@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.sidebar-right {
+  @apply w-[36rem] h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-4 flex-col gap-4 hidden lg:flex;
+}
