@@ -14,11 +14,17 @@ import "./Editor.module.css";
 import { Schema } from "@/components/Schema";
 import { Result } from "@/components/Result";
 import { History } from "@/components/History";
+import { Er } from "@/components/Er";
+import { useUI } from "@/store";
 
 export const CodeEditor = () => {
+  const { openModal } = useUI();
   const monaco = useCustomMonaco();
   const [ready, setReady] = useState(false);
   const [theme, setTheme] = useState("vs-light");
+  const [_editor, setEditor] = useState<string | null>(
+    "-- Write your SQL query here"
+  );
   const [tabs, _setTabs] = useState([
     {
       id: "1",
@@ -30,7 +36,7 @@ export const CodeEditor = () => {
       id: "2",
       icon: <GitFork className="w-4 h-4 rotate-180" />,
       label: "ER Diagram",
-      content: <></>,
+      content: <Er />,
     },
     {
       id: "3",
@@ -67,7 +73,7 @@ export const CodeEditor = () => {
         tokenizer: {
           root: [
             [
-              /\b(SELECT|FROM|WHERE|INSERT|INTO|VALUES|UPDATE|DELETE|CREATE|DROP|ALTER|JOIN|ON|AS|GROUP BY|ORDER BY|LIMIT|OFFSET)\b/i,
+              /\b(SELECT|FROM|WHERE|INSERT|INTO|VALUES|UPDATE|DELETE|CREATE|DROP|ALTER|JOIN|ON|GROUP BY|ORDER BY|LIMIT|OFFSET|AS|AND|OR|NOT|LIKE|IN|IS|EXISTS|BETWEEN|UNION|INTERSECT|EXCEPT|DISTINCT|CASE|WHEN|THEN|ELSE|END|NULL|TRUE|FALSE|CAST|CONVERT|COALESCE|IF|SET|BEGIN|COMMIT|ROLLBACK|TRANSACTION|LOCK|UNLOCK|INDEX|VIEW|TRIGGER|PROCEDURE|FUNCTION|SCHEMA|TABLE|COLUMN|DATABASE|USER|GRANT|REVOKE|PRIVILEGES|FOREIGN KEY|PRIMARY KEY|UNIQUE|CHECK|DEFAULT|AUTO_INCREMENT|SERIAL|BIGINT|INT|SMALLINT|TINYINT|FLOAT|DOUBLE|DECIMAL|CHAR|VARCHAR|TEXT|BLOB|DATE|TIME|DATETIME|TIMESTAMP|INTERVAL|YEAR|JSON|XML|ARRAY|ENUM|SET|BIT|POINT|LINESTRING|POLYGON|GEOMETRY|GEOGRAPHY|SPATIAL|WITH|WITHOUT|PARTITION|CLUSTER|REINDEX|ANALYZE|VACUUM|EXPLAIN|DESCRIBE|SHOW|USE|CONNECT|DISCONNECT|BACKUP|RESTORE|FLUSH|OPTIMIZE|REPAIR|TRUNCATE|RENAME)\b/i,
               "keyword",
             ],
             [/\b(NOW|COUNT|SUM|AVG|MIN|MAX|UPPER|LOWER)\b/i, "predefined"],
@@ -76,13 +82,19 @@ export const CodeEditor = () => {
             [/--.*/, "comment"],
             [/\b\d+(\.\d+)?\b/, "number"],
             [/[=<>!]+/, "operator"],
-            [/\b(id|name|created_at|email|status|price)\b/i, "identifier"],
+            [
+              /\b(id|name|created_at|email|status|price|user_id|users|orders)\b/i,
+              "identifier",
+            ],
           ],
         },
       });
 
       monaco.languages.registerCompletionItemProvider("sql", {
-        provideCompletionItems: (model, position) => {
+        provideCompletionItems: (
+          model: { getWordUntilPosition: (arg0: any) => any },
+          position: { lineNumber: any }
+        ) => {
           const word = model.getWordUntilPosition(position);
           const range = {
             startLineNumber: position.lineNumber,
@@ -91,25 +103,128 @@ export const CodeEditor = () => {
             endColumn: word.endColumn,
           };
 
-          const keywords = [
-            "SELECT",
-            "FROM",
-            "WHERE",
-            "INSERT",
-            "INTO",
-            "VALUES",
-            "UPDATE",
-            "DELETE",
-            "CREATE",
-            "DROP",
-            "ALTER",
-            "JOIN",
-            "ON",
-            "GROUP BY",
-            "ORDER BY",
-            "LIMIT",
-            "OFFSET",
-          ];
+          const keywords = Array.from(
+            new Set([
+              "SELECT",
+              "FROM",
+              "WHERE",
+              "INSERT",
+              "INTO",
+              "VALUES",
+              "UPDATE",
+              "DELETE",
+              "CREATE",
+              "DROP",
+              "ALTER",
+              "JOIN",
+              "ON",
+              "GROUP BY",
+              "ORDER BY",
+              "LIMIT",
+              "OFFSET",
+              "AS",
+              "AND",
+              "OR",
+              "NOT",
+              "LIKE",
+              "IN",
+              "IS",
+              "EXISTS",
+              "BETWEEN",
+              "UNION",
+              "INTERSECT",
+              "EXCEPT",
+              "DISTINCT",
+              "CASE",
+              "WHEN",
+              "THEN",
+              "ELSE",
+              "END",
+              "NULL",
+              "TRUE",
+              "FALSE",
+              "CAST",
+              "CONVERT",
+              "COALESCE",
+              "IF",
+              "SET",
+              "BEGIN",
+              "COMMIT",
+              "ROLLBACK",
+              "TRANSACTION",
+              "LOCK",
+              "UNLOCK",
+              "INDEX",
+              "VIEW",
+              "TRIGGER",
+              "PROCEDURE",
+              "FUNCTION",
+              "SCHEMA",
+              "TABLE",
+              "COLUMN",
+              "DATABASE",
+              "USER",
+              "GRANT",
+              "REVOKE",
+              "PRIVILEGES",
+              "FOREIGN KEY",
+              "PRIMARY KEY",
+              "UNIQUE",
+              "CHECK",
+              "DEFAULT",
+              "AUTO_INCREMENT",
+              "SERIAL",
+              "BIGINT",
+              "INT",
+              "SMALLINT",
+              "TINYINT",
+              "FLOAT",
+              "DOUBLE",
+              "DECIMAL",
+              "CHAR",
+              "VARCHAR",
+              "TEXT",
+              "BLOB",
+              "DATE",
+              "TIME",
+              "DATETIME",
+              "TIMESTAMP",
+              "INTERVAL",
+              "YEAR",
+              "JSON",
+              "XML",
+              "ARRAY",
+              "ENUM",
+              "SET",
+              "BIT",
+              "POINT",
+              "LINESTRING",
+              "POLYGON",
+              "GEOMETRY",
+              "GEOGRAPHY",
+              "SPATIAL",
+              "WITH",
+              "WITHOUT",
+              "PARTITION",
+              "CLUSTER",
+              "REINDEX",
+              "ANALYZE",
+              "VACUUM",
+              "EXPLAIN",
+              "DESCRIBE",
+              "SHOW",
+              "USE",
+              "CONNECT",
+              "DISCONNECT",
+              "BACKUP",
+              "RESTORE",
+              "FLUSH",
+              "OPTIMIZE",
+              "REPAIR",
+              "TRUNCATE",
+              "RENAME",
+            ])
+          );
 
           const functions = [
             "NOW()",
@@ -120,6 +235,36 @@ export const CodeEditor = () => {
             "MAX()",
             "UPPER()",
             "LOWER()",
+            "CONCAT()",
+            "SUBSTRING()",
+            "TRIM()",
+            "LENGTH()",
+            "ROUND()",
+            "DATE_FORMAT()",
+            "STR_TO_DATE()",
+            "IFNULL()",
+            "COALESCE()",
+            "CAST()",
+            "CONVERT()",
+            "JSON_EXTRACT()",
+            "XML_PARSE()",
+            "ARRAY_AGG()",
+            "JSON_ARRAY()",
+            "JSON_OBJECT()",
+            "REGEXP_LIKE()",
+            "REGEXP_REPLACE()",
+            "REGEXP_SUBSTR()",
+            "RANDOM()",
+            "UUID()",
+            "CURRENT_DATE()",
+            "CURRENT_TIME()",
+            "CURRENT_TIMESTAMP()",
+            "EXTRACT()",
+            "DATE_ADD()",
+            "DATE_SUB()",
+            "DATEDIFF()",
+            "TIMESTAMPDIFF()",
+            "FORMAT()",
           ];
 
           const tables = [
@@ -193,6 +338,22 @@ export const CodeEditor = () => {
     }
   }, [monaco]);
 
+  // Detect theme changes and update Monaco theme accordingly
+  useEffect(() => {
+    if (!monaco) return;
+    const observer = new MutationObserver(() => {
+      const isDark = document.documentElement.classList.contains("dark");
+      const selectedTheme = isDark ? "dracula" : "vs-light";
+      setTheme(selectedTheme);
+      monaco.editor.setTheme(selectedTheme);
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, [monaco]);
+
   return (
     <div className="editor-container">
       <div className="w-full h-full flex flex-col items-center justify-between">
@@ -208,13 +369,19 @@ export const CodeEditor = () => {
             </h1>
           </div>
           <div className="flex items-center space-x-4">
-            <button className="btn-outline">
+            <button
+              className="btn-outline"
+              onClick={() => openModal("confirmSaveQuery")}>
               <Save className="w-4 h-4 text-gray-700 dark:text-gray-300" />
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Save
               </span>
             </button>
-            <button className="btn-flat-primary">
+            <button
+              className="btn-flat-primary"
+              onClick={() => {
+                setActiveTabId("3");
+              }}>
               <Play className="w-4 h-4 text-white" />
               <span className="text-sm">Run Query</span>
             </button>
@@ -227,6 +394,12 @@ export const CodeEditor = () => {
             language="sql"
             defaultValue="-- Write your SQL query here"
             theme={theme}
+            onMount={(editor) => {
+              setEditor(editor.getValue());
+              editor.onDidChangeModelContent(() => {
+                setEditor(editor.getValue());
+              });
+            }}
             options={{
               minimap: { enabled: false },
               fontSize: 18,

@@ -7,13 +7,20 @@ interface Props {
 }
 
 export const UIProvider = ({ children }: Props) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modals, setModals] = useState<Record<string, boolean>>({});
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+  const openModal = (name: string) => {
+    setModals(prev => ({ ...prev, [name]: true }));
+  };
+
+  const closeModal = (name: string) => {
+    setModals(prev => ({ ...prev, [name]: false }));
+  };
+
+  const isModalOpen = (name: string) => !!modals[name];
 
   return (
-    <UIContext.Provider value={{ isModalOpen, openModal, closeModal }}>
+    <UIContext.Provider value={{ modals, openModal, closeModal, isModalOpen }}>
       {children}
     </UIContext.Provider>
   );

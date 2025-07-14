@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { createPopper, Instance } from "@popperjs/core";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { PortalMenuProps } from "./PortalMenu.types";
 
@@ -7,37 +8,51 @@ export const PortalMenu = ({
   anchorRef,
   open,
 }: PortalMenuProps & { open: boolean }) => {
-  const [style, setStyle] = useState<React.CSSProperties>();
   const menuRef = useRef<HTMLDivElement>(null);
+  const popperInstance = useRef<Instance | null>(null);
 
   useEffect(() => {
-    if (!anchorRef || !open) return;
+    if (!open || !anchorRef || !menuRef.current) return;
 
-    const updatePosition = () => {
-      const rect = anchorRef.getBoundingClientRect();
-      setStyle({
-        position: "absolute",
-        top: rect.bottom + window.scrollY + 8,
-        left: rect.right - 192 + window.scrollX,
-        zIndex: 9999,
-      });
+    popperInstance.current = createPopper(anchorRef, menuRef.current, {
+      placement: "bottom-end", // puedes cambiar a 'bottom-start', 'top', etc.
+      modifiers: [
+        {
+          name: "offset",
+          options: {
+            offset: [0, 8], // separación entre el anchor y el menú
+          },
+        },
+        {
+          name: "preventOverflow",
+          options: {
+            padding: 8,
+          },
+        },
+        {
+          name: "flip",
+          options: {
+            fallbackPlacements: ["top-end", "top-start"],
+          },
+        },
+      ],
+    });
+
+    return () => {
+      popperInstance.current?.destroy();
+      popperInstance.current = null;
     };
-
-    updatePosition();
   }, [anchorRef, open]);
 
   const portalRoot = document.getElementById("portal-root");
-  if (!portalRoot || !style || !open) return null;
+  if (!portalRoot || !open) return null;
 
   return createPortal(
     <div
       ref={menuRef}
-      style={style}
-      className="w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg p-2 z-50"
-    >
+      className="w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md shadow-lg p-2 z-50">
       {children}
     </div>,
     portalRoot
   );
 };
-

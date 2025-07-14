@@ -2,38 +2,50 @@ import avatar from "@assets/img/avatar.png";
 import logo from "@assets/sql_collaborator_logo.png";
 import {
   Bolt,
+  Download,
   Globe,
   Link2,
   Lock,
   LucideShare2,
   Pen,
+  Play,
+  Plus,
+  Save,
   Trash2,
   User2,
   View,
 } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { Card } from "./components/Card";
+import { ConfirmDialog } from "./components/ConfirmDialog";
+import { Message } from "./components/Message";
 import { Modal } from "./components/Modal/Modal";
 import { Navbar } from "./components/Navbar";
 import { PortalMenu } from "./components/PortalMenu";
-import { useUI } from "./store";
-import { createColorGenerator } from "./utils";
-import { Message } from "./components/Message";
-import { AnimatePresence } from "motion/react";
 import { Select } from "./components/Select";
 import { SidebarLeft } from "./components/SidebarLeft";
 import { SidebarRight } from "./components/SidebarRight";
 import { CodeEditor } from "./editor/Editor";
+import { useUI } from "./store";
+import { createColorGenerator } from "./utils";
 
 function App() {
   const username = "Juan Romero Collazos";
-  const { isModalOpen, closeModal } = useUI();
+  const { openModal, closeModal, isModalOpen } = useUI();
   const [openToolsId, setOpenToolsId] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [isPublic, setIsPublic] = useState(false);
   const [permission, setPermission] = useState("");
+  const [databaseEngine, setDatabaseEngine] = useState("");
   const [role, setRole] = useState("");
+  const [createSampleTables, setCreateSampleTables] = useState(true);
+  const [enableCommonExtensions, setEnableCommonExtensions] = useState(false);
+  const [createAdminUser, setCreateAdminUser] = useState(true);
+  const [email, setEmail] = useState("");
+  const [nameWorkspace, setNameWorkspace] = useState("");
+  const [descriptionWorkspace, setDescriptionWorkspace] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const generateColorHSLA = createColorGenerator();
   const link = "https://sql-collaborator.com/share/12345";
@@ -177,6 +189,19 @@ function App() {
     }
   };
 
+  const onLogin = () => {
+    openModal("login");
+  };
+
+  const onLogout = () => {
+    openModal("logout");
+  };
+
+  const closeTools = () => {
+    setOpenToolsId(null);
+    setAnchorEl(null);
+  };
+
   return (
     <div className="w-full h-screen flex flex-col">
       <div className="fixed top-4 right-4 space-y-2 z-999999">
@@ -201,8 +226,8 @@ function App() {
         </AnimatePresence>
       </div>
       <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
+        isOpen={isModalOpen("share")}
+        onClose={() => closeModal("share")}
         icon={<LucideShare2 className="w-6 h-6" />}
         title="Share Workspace"
         description="Invite collaborators to work together on this SQL workspace."
@@ -283,6 +308,8 @@ function App() {
         </div>
         <div className="flex items-center justify-between space-x-2 mt-4">
           <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             type="email"
             className="input w-full"
             placeholder="Enter email address"
@@ -299,7 +326,21 @@ function App() {
             placeholder="Select role"
             isClearable
           />
-          <button className="btn-flat-primary">
+          <button
+            className="btn-flat-primary"
+            onClick={() => {
+              addMessage(
+                `Invitation sent to ${email} as ${
+                  role === "V" ? "Viewer" : role === "E" ? "Editor" : "Admin"
+                }`,
+                "success"
+              );
+            }}
+            disabled={
+              !email ||
+              !role ||
+              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+            }>
             <User2 className="w-5 h-5" />
             <span>Invite</span>
           </button>
@@ -371,16 +412,44 @@ function App() {
                         <PortalMenu
                           anchorRef={anchorEl}
                           open={openToolsId === collab.id}>
-                          <button className="w-full text-left flex items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+                          <button
+                            key={`${collab.id}-edit`}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                            }}
+                            className="w-full text-left flex items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer"
+                            onClick={() => {
+                              addMessage("Edit permissions clicked", "info");
+                              closeTools();
+                            }}>
                             <Pen className="w-4 h-4" />
                             <span>Edit</span>
                           </button>
-                          <button className="w-full text-left flex items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+                          <button
+                            key={`${collab.id}-view`}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                            }}
+                            className="w-full text-left flex items-center space-x-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer"
+                            onClick={() => {
+                              addMessage("View permissions clicked", "info");
+                              closeTools();
+                            }}>
                             <View className="w-4 h-4" />
                             <span>Viewer</span>
                           </button>
                           <hr className="border-gray-200 dark:border-gray-700" />
-                          <button className="w-full text-left flex items-center space-x-2 p-2 hover:bg-red-100 dark:hover:bg-red-700 rounded-md text-red-600 dark:text-red-400 cursor-pointer">
+                          <button
+                            key={`${collab.id}-remove`}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                            }}
+                            className="w-full text-left flex items-center space-x-2 p-2 hover:bg-red-100 dark:hover:bg-red-700 rounded-md text-red-600 dark:text-red-400 cursor-pointer"
+                            onClick={() => {
+                              console.log("Remove collaborator clicked");
+                              openModal("deleteCollaborator");
+                              closeTools();
+                            }}>
                             <Trash2 className="w-4 h-4 text-red-500 dark:text-red-300" />
                             <span>Remove</span>
                           </button>
@@ -419,11 +488,488 @@ function App() {
           </div>
         </div>
       </Modal>
+      <Modal
+        isOpen={isModalOpen("create")}
+        onClose={() => closeModal("create")}
+        icon={<Plus className="w-6 h-6" />}
+        title="Create New Database"
+        description="Configure your new database connection and settings."
+        size="xl">
+        <div className="flex flex-col items-center justify-between">
+          <span className="w-full text-gray-700 dark:text-white font-bold">
+            Basic Information
+          </span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full mt-4">
+            <label className="flex flex-col space-y-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Workspace Name *
+              </span>
+              <input
+                type="text"
+                className="input"
+                placeholder="Database Name"
+              />
+            </label>
+            <label className="flex flex-col space-y-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Database Name *
+              </span>
+              <Select
+                options={[
+                  { value: "mysql", label: "MySQL" },
+                  { value: "postgres", label: "PostgreSQL" },
+                  { value: "sqlite", label: "SQLite" },
+                  { value: "mssql", label: "MSSQL" },
+                ]}
+                className="w-full"
+                value={databaseEngine}
+                onChange={(value) => setDatabaseEngine(value)}
+                placeholder="Select a database"
+              />
+            </label>
+            <label className="flex flex-col space-y-2 col-span-1 lg:col-span-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Description (Optional)
+              </span>
+              <textarea
+                className="input resize-none"
+                placeholder="Enter a brief description"
+                rows={3}
+              />
+            </label>
+          </div>
+          <hr className="border-gray-300 my-4 w-full" />
+          <span className="w-full text-gray-700 dark:text-white font-bold">
+            Connection Settings
+          </span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full mt-4">
+            <label className="flex flex-col space-y-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Host
+              </span>
+              <input type="text" className="input" placeholder="localhost" />
+            </label>
+            <label className="flex flex-col space-y-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Port
+              </span>
+              <input type="text" className="input" placeholder="3306" />
+            </label>
+            <label className="flex flex-col space-y-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Username
+              </span>
+              <input type="text" className="input" placeholder="root" />
+            </label>
+            <label className="flex flex-col space-y-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Password
+              </span>
+              <input type="password" className="input" placeholder="********" />
+            </label>
+            <label className="flex flex-col space-y-2 col-span-1 lg:col-span-2">
+              <span className="text-gray-600 dark:text-gray-400 font-semibold">
+                Database Name
+              </span>
+              <input type="text" className="input" placeholder="my_database" />
+              <small className="text-gray-500 dark:text-gray-400">
+                This will be the name of the database to create on the server.
+              </small>
+            </label>
+          </div>
+          <hr className="border-gray-300 my-4 w-full" />
+          <span className="w-full text-gray-700 dark:text-white font-bold">
+            Initial Setup
+          </span>
+          <div className="grid grid-cols-1 gap-4 w-full mt-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                className="checkbox"
+                checked={createSampleTables}
+                onChange={() => setCreateSampleTables((prev) => !prev)}
+              />
+              <span className="text-gray-600 dark:text-gray-400">
+                Create sample tables (users, products, orders)
+              </span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                className="checkbox"
+                checked={enableCommonExtensions}
+                onChange={() => setEnableCommonExtensions((prev) => !prev)}
+              />
+              <span className="text-gray-600 dark:text-gray-400">
+                Enable common extensions (UUID, JSON functions)
+              </span>
+            </label>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                className="checkbox"
+                checked={createAdminUser}
+                onChange={() => setCreateAdminUser((prev) => !prev)}
+              />
+              <span className="text-gray-600 dark:text-gray-400">
+                Create admin user for this database
+              </span>
+            </label>
+          </div>
+          <div className="mt-4 w-full flex justify-end">
+            <button
+              className="btn btn-outline mr-2"
+              onClick={() => closeModal("create")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-primary"
+              onClick={() => openModal("confirmCreateDatabase")}>
+              <Plus className="w-5 h-5 ml-2" />
+              <span>Create Database</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={isModalOpen("login")}
+        onClose={() => closeModal("login")}
+        icon={<User2 className="w-6 h-6" />}
+        title="Login"
+        description="Please enter your credentials to access the SQL Collaborator."
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <button className="btn btn-outline w-full mb-4">
+            <i className="bi bi-google"></i>
+            <span>Login with Google</span>
+          </button>
+          <button className="btn btn-outline w-full mb-4">
+            <i className="bi bi-github"></i>
+            <span>Login with GitHub</span>
+          </button>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-center mb-4">
+            <span className="text-xs text-gray-500">
+              Al continuar, aceptas nuestros{" "}
+              <button
+                onClick={() => openModal("terms&conditions")}
+                rel="noopener noreferrer"
+                className="underline text-blue-600 hover:text-blue-800 cursor-pointer">
+                Términos y Condiciones
+              </button>
+              .
+            </span>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={isModalOpen("terms&conditions")}
+        onClose={() => closeModal("terms&conditions")}
+        icon={<Lock className="w-6 h-6" />}
+        title="Terms & Conditions"
+        description="Please review and accept our terms to continue using the platform."
+        size="lg">
+        <div className="p-4 max-h-[60vh] overflow-y-auto">
+          <h2 className="text-lg font-semibold mb-2">Terms & Conditions</h2>
+          <p className="text-sm text-gray-700 mb-4">
+            By accessing and using this platform, you acknowledge and agree to
+            be bound by the following terms and conditions. These terms govern
+            your access, usage, and conduct within the application.
+          </p>
+
+          <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2">
+            <li>
+              <strong>Usage:</strong> You agree to use this platform solely for
+              lawful and authorized purposes.
+            </li>
+            <li>
+              <strong>Data Responsibility:</strong> You are solely responsible
+              for the accuracy and legality of the queries and data you interact
+              with.
+            </li>
+            <li>
+              <strong>Collaborative Environment:</strong> When sharing
+              workspaces or collaborating, you agree to respect the intellectual
+              property and data of other users.
+            </li>
+            <li>
+              <strong>Privacy:</strong> We do not collect sensitive data unless
+              explicitly authorized. Please ensure you do not upload private
+              credentials or personal information without proper encryption.
+            </li>
+            <li>
+              <strong>Modifications:</strong> These terms may be updated
+              periodically. Continued use implies your acceptance of the latest
+              version.
+            </li>
+          </ul>
+
+          <p className="text-sm text-gray-700 mt-4">
+            If you do not agree to these terms, you must discontinue using the
+            platform.
+          </p>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={isModalOpen("editWorkspace")}
+        onClose={() => closeModal("editWorkspace")}
+        icon={<Pen className="w-6 h-6" />}
+        title="Edit Workspace"
+        description="Modify the details of your SQL workspace."
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <label className="flex flex-col space-y-2 w-full">
+            <span className="text-gray-600 dark:text-gray-400 font-semibold">
+              Workspace Name *
+            </span>
+            <input
+              type="text"
+              className="input w-full"
+              placeholder="Enter workspace name"
+              value={nameWorkspace}
+              onChange={(e) => setNameWorkspace(e.target.value)}
+            />
+          </label>
+          <label className="flex flex-col space-y-2 w-full mt-4">
+            <span className="text-gray-600 dark:text-gray-400 font-semibold">
+              Description (Optional)
+            </span>
+            <textarea
+              className="input resize-none w-full"
+              placeholder="Enter a brief description"
+              rows={3}
+              value={descriptionWorkspace}
+              onChange={(e) => setDescriptionWorkspace(e.target.value)}
+            />
+          </label>
+          <div className="mt-4 w-full flex justify-end">
+            <button
+              className="btn btn-outline mr-2"
+              onClick={() => closeModal("editWorkspace")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-primary"
+              onClick={() => {
+                closeModal("editWorkspace");
+                addMessage("Workspace updated successfully!", "success");
+              }}
+              disabled={!nameWorkspace.trim()}>
+              <Save className="w-5 h-5 ml-2" />
+              <span>Save Changes</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <ConfirmDialog
+        isOpen={isModalOpen("exportSql")}
+        onClose={() => closeModal("exportSql")}
+        icon={<Download className="w-6 h-6" />}
+        title="Export SQL"
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to export the SQL? This action cannot be
+            undone.
+          </p>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-end space-x-2">
+            <button
+              className="btn btn-outline"
+              onClick={() => closeModal("exportSql")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-primary"
+              onClick={() => {
+                closeModal("exportSql");
+                addMessage("SQL exported successfully!", "success");
+              }}>
+              <Download className="w-5 h-5 ml-2" />
+              <span>Export SQL</span>
+            </button>
+          </div>
+        </div>
+      </ConfirmDialog>
+      <ConfirmDialog
+        isOpen={isModalOpen("deleteWorkspace")}
+        onClose={() => closeModal("deleteWorkspace")}
+        icon={<Trash2 className="w-6 h-6" />}
+        title="Delete Workspace"
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to delete this workspace? This action cannot
+            be undone.
+          </p>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-end space-x-2">
+            <button
+              className="btn btn-outline"
+              onClick={() => closeModal("deleteWorkspace")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-danger"
+              onClick={() => {
+                closeModal("deleteWorkspace");
+                addMessage("Workspace deleted successfully!", "success");
+              }}>
+              <Trash2 className="w-5 h-5 ml-2" />
+              <span>Delete Workspace</span>
+            </button>
+          </div>
+        </div>
+      </ConfirmDialog>
+      <ConfirmDialog
+        isOpen={isModalOpen("deleteCollaborator")}
+        onClose={() => closeModal("deleteCollaborator")}
+        icon={<Trash2 className="w-6 h-6" />}
+        title="Delete Collaborator"
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to remove this collaborator? This action
+            cannot be undone.
+          </p>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-end space-x-2">
+            <button
+              className="btn btn-outline"
+              onClick={() => closeModal("deleteCollaborator")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-danger"
+              onClick={() => {
+                closeModal("deleteCollaborator");
+                addMessage("Collaborator removed successfully!", "success");
+              }}>
+              <Trash2 className="w-5 h-5 ml-2" />
+              <span>Remove Collaborator</span>
+            </button>
+          </div>
+        </div>
+      </ConfirmDialog>
+      <ConfirmDialog
+        isOpen={isModalOpen("logout")}
+        onClose={() => closeModal("logout")}
+        icon={<Lock className="w-6 h-6" />}
+        title="Logout"
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to log out? You will need to log in again to
+            access your workspaces.
+          </p>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-end space-x-2">
+            <button
+              className="btn btn-outline"
+              onClick={() => closeModal("logout")}>
+              Cancel
+            </button>
+            <button className="btn btn-flat-primary" onClick={onLogin}>
+              <Lock className="w-5 h-5 ml-2" />
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </ConfirmDialog>
+      <ConfirmDialog
+        isOpen={isModalOpen("confirmCreateDatabase")}
+        onClose={() => closeModal("confirmCreateDatabase")}
+        icon={<Plus className="w-6 h-6" />}
+        title="Confirm Create Database"
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <p className="text-gray-600 dark:text-gray-400">
+            Please review the database settings before proceeding.
+          </p>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-end space-x-2">
+            <button
+              className="btn btn-outline"
+              onClick={() => closeModal("confirmCreateDatabase")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-primary"
+              onClick={() => {
+                closeModal("create");
+                closeModal("confirmCreateDatabase");
+                addMessage("Database created successfully!", "success");
+              }}>
+              <Plus className="w-5 h-5 ml-2" />
+              <span>Confirm Create</span>
+            </button>
+          </div>
+        </div>
+      </ConfirmDialog>
+      <ConfirmDialog
+        isOpen={isModalOpen("confirmSaveQuery")}
+        onClose={() => closeModal("confirmSaveQuery")}
+        icon={<Save className="w-6 h-6" />}
+        title="Confirm Save Query"
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to save the current query? This will overwrite
+            any unsaved changes.
+          </p>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-end space-x-2">
+            <button
+              className="btn btn-outline"
+              onClick={() => closeModal("confirmSaveQuery")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-primary"
+              onClick={() => {
+                closeModal("confirmSaveQuery");
+                addMessage("Query saved successfully!", "success");
+              }}>
+              <Save className="w-5 h-5 ml-2" />
+              <span>Confirm Save</span>
+            </button>
+          </div>
+        </div>
+      </ConfirmDialog>
+      <ConfirmDialog
+        isOpen={isModalOpen("confirmStartWorkspace")}
+        onClose={() => closeModal("confirmStartWorkspace")}
+        icon={<Play className="w-6 h-6" />}
+        title="Confirm Start Workspace"
+        size="md">
+        <div className="flex flex-col items-center justify-between">
+          <p className="text-gray-600 dark:text-gray-400">
+            Are you sure you want to start the workspace? This will initialize
+            the database and prepare it for use.
+          </p>
+          <hr className="border-gray-300 my-4 w-full" />
+          <div className="w-full flex items-center justify-end space-x-2">
+            <button
+              className="btn btn-outline"
+              onClick={() => closeModal("confirmStartWorkspace")}>
+              Cancel
+            </button>
+            <button
+              className="btn btn-flat-primary"
+              onClick={() => {
+                closeModal("confirmStartWorkspace");
+                addMessage("Workspace started successfully!", "success");
+              }}>
+              <Play className="w-5 h-5 ml-2" />
+              <span>Confirm Start</span>
+            </button>
+          </div>
+        </div>
+      </ConfirmDialog>
       <Navbar
         isAuthenticated={false}
-        onLogin={() => console.log("Login clicked")}
-        onLogout={() => console.log("Logout clicked")}
-        onRegister={() => console.log("Register clicked")}
+        onLogin={onLogin}
+        onLogout={onLogout}
         userName={username}
         logoUrl={logo}
       />

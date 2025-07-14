@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useSidebar, useUI } from "@/store";
 import avatar from "@assets/img/avatar.png";
 import {
   Download,
   KeyIcon,
-  LogIn,
   LogOut,
   LucideShare2,
   MenuIcon,
@@ -11,19 +10,22 @@ import {
   Sun,
   Users2,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import "./Navbar.module.css";
 import { NavbarProps } from "./Navbar.types";
-import { useUI } from "@/store";
 
 export const Navbar = ({
   isAuthenticated,
   onLogin,
   onLogout,
-  onRegister,
   userName,
   logoUrl,
 }: NavbarProps) => {
   const { openModal } = useUI();
+  const { openSidebar, closeSidebar } = useSidebar();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollaboratorsOpen, setSidebarCollaboratorsOpen] =
+    useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -69,10 +71,35 @@ export const Navbar = ({
     }
   };
 
+  useEffect(() => {
+    if (!sidebarOpen) {
+      closeSidebar("main");
+    } else {
+      openSidebar("main");
+    }
+  }, [sidebarOpen]);
+
+  useEffect(() => {
+    if (!sidebarCollaboratorsOpen) {
+      closeSidebar("collaborators");
+    } else {
+      openSidebar("collaborators");
+    }
+  }, [sidebarCollaboratorsOpen]);
+
   return (
     <nav className="navbar z-10">
       <div className="flex items-center justify-center space-x-2">
-        <button className="btn-flat">
+        <button
+          className="btn-flat"
+          onClick={() => {
+            if (sidebarOpen) {
+              closeSidebar("main");
+            } else {
+              openSidebar("main");
+            }
+            setSidebarOpen(!sidebarOpen);
+          }}>
           <MenuIcon className="w-6 h-6" />
         </button>
         <div className="w-px h-8 bg-gray-300 mx-2"></div>
@@ -83,15 +110,24 @@ export const Navbar = ({
       </div>
 
       <div className="flex items-center space-x-4">
-        <button className="btn-outline" onClick={openModal}>
+        <button className="btn-outline" onClick={() => openModal("share")}>
           <LucideShare2 className="w-4 h-4" />
           <span className="hidden lg:block">Share</span>
         </button>
-        <button className="btn-outline">
+        <button className="btn-outline" onClick={() => openModal("exportSql")}>
           <Download className="w-4 h-4" />
           <span className="hidden lg:block">Export SQL</span>
         </button>
-        <button className="btn-flat">
+        <button
+          className="btn-flat"
+          onClick={() => {
+            if (sidebarCollaboratorsOpen) {
+              closeSidebar("collaborators");
+            } else {
+              openSidebar("collaborators");
+            }
+            setSidebarCollaboratorsOpen(!sidebarCollaboratorsOpen);
+          }}>
           <Users2 className="w-4 h-4" />
           <span className="hidden lg:block">Collaborators</span>
         </button>
@@ -131,14 +167,6 @@ export const Navbar = ({
                       <KeyIcon className="w-4 h-4" />
                     </div>
                     <span>Login</span>
-                  </button>
-                  <button
-                    className="dropdown-item w-full text-left hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900 dark:hover:text-blue-400 text-black dark:text-gray-100"
-                    onClick={onRegister}>
-                    <div className="tag-info">
-                      <LogIn className="w-4 h-4" />
-                    </div>
-                    <span>Register</span>
                   </button>
                 </div>
               )}

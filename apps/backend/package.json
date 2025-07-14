@@ -1,9 +1,12 @@
 {
+  "name": "backend",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
   "dependencies": {
-    "@trpc/server": "^11.4.3",
-    "zod": "^3.25.74"
+    "hono": "^4.8.4"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3"
+    "@types/bun": "latest"
   }
 }

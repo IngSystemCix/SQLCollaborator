@@ -4,7 +4,8 @@
     "paths": {
       "@/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
-      "@components/*": ["src/components/*"]
+      "@components/*": ["src/components/*"],
+      "@backend/*": ["../backend/src/*"],
     },
     "lib": ["DOM", "ES2020"],
     "jsx": "react-jsx",

@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+.er-container {
+  @apply w-full bg-white dark:bg-gray-900;
+}
+
+.react-flow__attribution {
+  @apply hidden!;
+}
